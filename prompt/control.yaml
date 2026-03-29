@@ -1,0 +1,566 @@
+version: 1
+project: upscale_image
+current_step: "18"
+next_step: null
+last_updated: "2026-03-28"
+global_notes:
+  - "Seguir a especificacao tecnica e as ADRs como fonte principal."
+  - "Executar apenas um passo por vez."
+  - "Retomar passo em andamento antes de iniciar novo."
+steps:
+  - id: "01"
+    slug: "estruturar-projeto-e-ambiente"
+    title: "Estruturar o Projeto e o Ambiente"
+    prompt_file: "prompt/steps/01-estruturar-projeto-e-ambiente.md"
+    part_file: "docs/parts/01-estruturar-projeto-e-ambiente.md"
+    status: "completed"
+    started_at: "2026-03-28"
+    completed_at: "2026-03-28"
+    acceptance_status: "passed"
+    last_checkpoint: "Todos os criterios de aceite validados."
+    resume_instructions: null
+    completed_items:
+      - "Criar estrutura base do projeto Python (src layout com src/upscale_image e subpacotes)."
+      - "Criar pacote principal e entrypoint minimo de CLI (Typer, comando upscale, --help, --version)."
+      - "Definir arquivos iniciais de dependencia (pyproject.toml) e documentacao (README.md, .gitignore)."
+      - "Validar que a CLI responde: upscale-image --help e upscale-image --version OK."
+    pending_items: []
+    touched_files:
+      - "src/upscale_image/__init__.py"
+      - "src/upscale_image/cli/__init__.py"
+      - "src/upscale_image/cli/main.py"
+      - "src/upscale_image/config/__init__.py"
+      - "src/upscale_image/io/__init__.py"
+      - "src/upscale_image/models/__init__.py"
+      - "src/upscale_image/pipeline/__init__.py"
+      - "src/upscale_image/metrics/__init__.py"
+      - "src/upscale_image/reports/__init__.py"
+      - "tests/__init__.py"
+      - "pyproject.toml"
+      - "README.md"
+      - ".gitignore"
+    tests_run:
+      - "upscale-image --help (saida correta com comando upscale listado)"
+      - "upscale-image upscale --help (todos os parametros listados)"
+      - "upscale-image --version (imprime upscale-image 0.1.0)"
+      - "python -c 'import upscale_image' (importacao sem erro)"
+    artifacts:
+      - "src/upscale_image/ (pacote instalavel via pip install -e .)"
+      - "pyproject.toml"
+      - "README.md"
+      - ".gitignore"
+    blocking_reason: null
+  - id: "02"
+    slug: "implementar-camada-de-configuracao"
+    title: "Implementar a Camada de Configuração"
+    prompt_file: "prompt/steps/02-implementar-camada-de-configuracao.md"
+    part_file: "docs/parts/02-implementar-camada-de-configuracao.md"
+    status: "completed"
+    started_at: "2026-03-28"
+    completed_at: "2026-03-28"
+    acceptance_status: "passed"
+    last_checkpoint: "Todos os criterios de aceite validados. 15/15 testes passando."
+    resume_instructions: null
+    completed_items:
+      - "Definir objeto de configuracao canonico (AppConfig, ModelConfig, RuntimeConfig via dataclasses)."
+      - "Implementar leitura YAML (loader.py com PyYAML, suporte a arquivo vazio)."
+      - "Implementar merge CLI > YAML > defaults (resolve_config centralizado)."
+      - "Validar configuracoes invalidas (device, scale, precision, fp16+cpu, campos ausentes)."
+      - "Implementar serializacao (config_to_dict, config_to_yaml, save_effective_config)."
+      - "Integrar resolve_config no CLI (erro amigavel em caso de config invalida)."
+    pending_items: []
+    touched_files:
+      - "src/upscale_image/config/__init__.py"
+      - "src/upscale_image/config/schema.py"
+      - "src/upscale_image/config/loader.py"
+      - "src/upscale_image/config/serializer.py"
+      - "src/upscale_image/cli/main.py"
+      - "tests/test_config.py"
+    tests_run:
+      - "pytest tests/test_config.py — 15 passed"
+      - "upscale-image upscale /tmp --output /tmp/out (config valida, saida correta)"
+      - "upscale-image upscale /tmp --output /tmp/out --device tpu (erro claro, exit 1)"
+    artifacts:
+      - "src/upscale_image/config/schema.py"
+      - "src/upscale_image/config/loader.py"
+      - "src/upscale_image/config/serializer.py"
+      - "tests/test_config.py"
+    blocking_reason: null
+  - id: "03"
+    slug: "implementar-descoberta-e-validacao-de-entradas"
+    title: "Implementar Descoberta e Validação de Entradas"
+    prompt_file: "prompt/steps/03-implementar-descoberta-e-validacao-de-entradas.md"
+    part_file: "docs/parts/03-implementar-descoberta-e-validacao-de-entradas.md"
+    status: "completed"
+    started_at: "2026-03-28"
+    completed_at: "2026-03-28"
+    acceptance_status: "passed"
+    last_checkpoint: "Todos os criterios de aceite validados. 18/18 testes passando."
+    resume_instructions: null
+    completed_items:
+      - "Implementar descoberta de arquivos suportados (todas 7 extensoes cobertas)."
+      - "Implementar validacao de leitura via cv2.imread (corrupted != unsupported)."
+      - "Garantir ordenacao deterministica por nome de arquivo, case-insensitive."
+      - "Montar estrutura ImageTask com output_path resolvido na descoberta."
+      - "Separar SkippedFile com motivo explicito para cada arquivo excluido."
+    pending_items: []
+    touched_files:
+      - "src/upscale_image/io/__init__.py"
+      - "src/upscale_image/io/task.py"
+      - "src/upscale_image/io/discovery.py"
+      - "tests/test_discovery.py"
+    tests_run:
+      - "pytest tests/test_discovery.py — 18 passed"
+      - "pytest tests/ — 33 passed (regressao completa)"
+    artifacts:
+      - "src/upscale_image/io/task.py"
+      - "src/upscale_image/io/discovery.py"
+      - "tests/test_discovery.py"
+    blocking_reason: null
+  - id: "04"
+    slug: "implementar-estrutura-de-rodada"
+    title: "Implementar a Estrutura de Rodada"
+    prompt_file: "prompt/steps/04-implementar-estrutura-de-rodada.md"
+    part_file: "docs/parts/04-implementar-estrutura-de-rodada.md"
+    status: "completed"
+    started_at: "2026-03-28"
+    completed_at: "2026-03-28"
+    acceptance_status: "passed"
+    last_checkpoint: "Todos os criterios de aceite validados. 14/14 testes passando."
+    resume_instructions: null
+    completed_items:
+      - "Gerar run_id padronizado (run_YYYYMMDD_HHMMSS_<model>_<scale>x, chars sanitizados)."
+      - "Criar arvore da run (runs/<run_id>/outputs/, metrics/, logs.txt, manifest.json, effective_config.yaml)."
+      - "Persistir effective_config.yaml com merge completo CLI > YAML > defaults."
+      - "Garantir nao sobrescrita (FileExistsError em colisao de ID)."
+    pending_items: []
+    touched_files:
+      - "src/upscale_image/pipeline/__init__.py"
+      - "src/upscale_image/pipeline/run.py"
+      - "tests/test_run.py"
+    tests_run:
+      - "pytest tests/test_run.py — 14 passed"
+      - "pytest tests/ — 47 passed (regressao completa)"
+    artifacts:
+      - "src/upscale_image/pipeline/run.py"
+      - "tests/test_run.py"
+    blocking_reason: null
+  - id: "05"
+    slug: "implementar-logging-e-rastreabilidade-basica"
+    title: "Implementar Logging e Rastreabilidade Básica"
+    prompt_file: "prompt/steps/05-implementar-logging-e-rastreabilidade-basica.md"
+    part_file: "docs/parts/05-implementar-logging-e-rastreabilidade-basica.md"
+    status: "completed"
+    started_at: "2026-03-28"
+    completed_at: "2026-03-28"
+    acceptance_status: "passed"
+    last_checkpoint: "Todos os criterios de aceite validados. 13/13 testes passando."
+    resume_instructions: null
+    completed_items:
+      - "Configurar logging em console (RichHandler, INFO+, markup habilitado)."
+      - "Configurar logging em arquivo por run (FileHandler em logs.txt, DEBUG+, plain text)."
+      - "Registrar eventos minimos: run_start, skipped_files, item_start, item_done, item_error, run_summary."
+      - "Validar rastreabilidade: dois loggers independentes nao cruzam conteudo."
+    pending_items: []
+    touched_files:
+      - "src/upscale_image/pipeline/__init__.py"
+      - "src/upscale_image/pipeline/logger.py"
+      - "tests/test_logger.py"
+    tests_run:
+      - "pytest tests/test_logger.py — 13 passed"
+      - "pytest tests/ — 60 passed (regressao completa)"
+    artifacts:
+      - "src/upscale_image/pipeline/logger.py"
+      - "tests/test_logger.py"
+    blocking_reason: null
+  - id: "06"
+    slug: "definir-interface-comum-de-modelos"
+    title: "Definir a Interface Comum de Modelos"
+    prompt_file: "prompt/steps/06-definir-interface-comum-de-modelos.md"
+    part_file: "docs/parts/06-definir-interface-comum-de-modelos.md"
+    status: "completed"
+    started_at: "2026-03-28"
+    completed_at: "2026-03-28"
+    acceptance_status: "passed"
+    last_checkpoint: "Todos os criterios de aceite validados. 15/15 testes passando."
+    resume_instructions: null
+    completed_items:
+      - "Definir contrato base de modelo (SuperResolutionModel ABC com load, upscale, unload)."
+      - "Expor metadados minimos (name, scale, is_loaded como propriedades abstratas)."
+      - "Criar runner mock (MockSuperResolutionModel, resize por nearest-neighbour, sem pesos)."
+    pending_items: []
+    touched_files:
+      - "src/upscale_image/models/__init__.py"
+      - "src/upscale_image/models/base.py"
+      - "src/upscale_image/models/mock.py"
+      - "tests/test_model_contract.py"
+    tests_run:
+      - "pytest tests/test_model_contract.py — 15 passed"
+      - "pytest tests/ — 75 passed (regressao completa)"
+    artifacts:
+      - "src/upscale_image/models/base.py"
+      - "src/upscale_image/models/mock.py"
+      - "tests/test_model_contract.py"
+    blocking_reason: null
+  - id: "07"
+    slug: "implementar-registro-e-selecao-de-modelos"
+    title: "Implementar Registro e Seleção de Modelos"
+    prompt_file: "prompt/steps/07-implementar-registro-e-selecao-de-modelos.md"
+    part_file: "docs/parts/07-implementar-registro-e-selecao-de-modelos.md"
+    status: "completed"
+    started_at: "2026-03-28"
+    completed_at: "2026-03-28"
+    acceptance_status: "passed"
+    last_checkpoint: "Todos os criterios de aceite validados. 15/15 testes passando."
+    resume_instructions: null
+    completed_items:
+      - "Implementar ModelRegistry com register, resolve, deregister, available."
+      - "Resolver modelo por nome logico via config.model.name (sem if/else no pipeline)."
+      - "Falhar cedo com ValueError claro para nome invalido (lista os disponiveis)."
+      - "Registro default com 'mock' pre-registrado explicitamente."
+      - "Instancias independentes a cada resolve (sem estado compartilhado)."
+    pending_items: []
+    touched_files:
+      - "src/upscale_image/models/__init__.py"
+      - "src/upscale_image/models/registry.py"
+      - "tests/test_registry.py"
+    tests_run:
+      - "pytest tests/test_registry.py — 15 passed"
+      - "pytest tests/ — 90 passed (regressao completa)"
+    artifacts:
+      - "src/upscale_image/models/registry.py"
+      - "tests/test_registry.py"
+    blocking_reason: null
+  - id: "08"
+    slug: "integrar-primeiro-runner-real"
+    title: "Integrar o Primeiro Runner Real"
+    prompt_file: "prompt/steps/08-integrar-primeiro-runner-real.md"
+    part_file: "docs/parts/08-integrar-primeiro-runner-real.md"
+    status: "completed"
+    started_at: "2026-03-28"
+    completed_at: "2026-03-28"
+    acceptance_status: "passed"
+    last_checkpoint: "Todos os criterios de aceite validados. 17/17 testes passando (inclui CUDA)."
+    resume_instructions: null
+    completed_items:
+      - "Integrar RealESRGANRunner com RRDBNet via basicsr (shim torchvision aplicado)."
+      - "Carregar pesos .pth: layouts raw, params_ema e params suportados."
+      - "Resolver device CPU/CUDA com erro claro para CUDA indisponivel."
+      - "Precisao fp32/fp16 aplicada no upscale via config."
+      - "Registrado como 'realesrgan-x4' no registry default."
+    pending_items: []
+    touched_files:
+      - "src/upscale_image/models/_compat.py"
+      - "src/upscale_image/models/realesrgan.py"
+      - "src/upscale_image/models/registry.py"
+      - "tests/test_realesrgan_runner.py"
+    tests_run:
+      - "pytest tests/test_realesrgan_runner.py — 17 passed (inclui test_upscale_on_cuda)"
+      - "pytest tests/ — 107 passed (regressao completa)"
+    artifacts:
+      - "src/upscale_image/models/_compat.py"
+      - "src/upscale_image/models/realesrgan.py"
+      - "tests/test_realesrgan_runner.py"
+    blocking_reason: null
+  - id: "09"
+    slug: "implementar-pipeline-batch-de-inferencia"
+    title: "Implementar o Pipeline Batch de Inferência"
+    prompt_file: "prompt/steps/09-implementar-pipeline-batch-de-inferencia.md"
+    part_file: "docs/parts/09-implementar-pipeline-batch-de-inferencia.md"
+    status: "completed"
+    started_at: "2026-03-28"
+    completed_at: "2026-03-28"
+    acceptance_status: "passed"
+    last_checkpoint: "Todos os criterios de aceite validados. 13/13 testes passando."
+    resume_instructions: null
+    completed_items:
+      - "Implementar loop batch (ordem estavel, isolamento por item)."
+      - "Persistir outputs em ctx.outputs_dir com extensao .png."
+      - "Registrar status por item (done/failed) em ItemResult com elapsed e error."
+      - "Continuar em falha recuperavel (excecao por item nao aborta batch)."
+      - "Integrar CLI com wiring completo: config → run → logger → model → batch."
+    pending_items: []
+    touched_files:
+      - "src/upscale_image/pipeline/batch.py"
+      - "src/upscale_image/pipeline/__init__.py"
+      - "src/upscale_image/cli/main.py"
+      - "tests/test_batch.py"
+    tests_run:
+      - "pytest tests/test_batch.py — 13 passed"
+      - "pytest tests/ — 120 passed (regressao completa)"
+    artifacts:
+      - "src/upscale_image/pipeline/batch.py"
+      - "tests/test_batch.py"
+    blocking_reason: null
+  - id: "10"
+    slug: "implementar-medicao-de-tempo-e-resultado-por-imagem"
+    title: "Implementar Medição de Tempo e Resultado por Imagem"
+    prompt_file: "prompt/steps/10-implementar-medicao-de-tempo-e-resultado-por-imagem.md"
+    part_file: "docs/parts/10-implementar-medicao-de-tempo-e-resultado-por-imagem.md"
+    status: "completed"
+    started_at: "2026-03-28"
+    completed_at: "2026-03-28"
+    acceptance_status: "passed"
+    last_checkpoint: "Todos os criterios de aceite validados. 18/18 testes passando."
+    resume_instructions: null
+    completed_items:
+      - "Medir tempo por item: elapsed total e inference_time_ms (apenas model.upscale) separados."
+      - "Registrar dimensoes: input_width/height e output_width/height por item."
+      - "Padronizar status individual: estrutura uniforme para done e failed (campos None se etapa nao concluiu)."
+      - "Preparar agregacao parcial: RunStats com total_elapsed_s, success_rate, avg/min/max inference_ms."
+    pending_items: []
+    touched_files:
+      - "src/upscale_image/pipeline/batch.py"
+      - "src/upscale_image/pipeline/__init__.py"
+      - "tests/test_measurements.py"
+    tests_run:
+      - "pytest tests/test_measurements.py — 18 passed"
+      - "pytest tests/ — 138 passed (regressao completa)"
+    artifacts:
+      - "tests/test_measurements.py"
+    blocking_reason: null
+  - id: "11"
+    slug: "implementar-manifesto-final-da-rodada"
+    title: "Implementar o Manifesto Final da Rodada"
+    prompt_file: "prompt/steps/11-implementar-manifesto-final-da-rodada.md"
+    part_file: "docs/parts/11-implementar-manifesto-final-da-rodada.md"
+    status: "completed"
+    started_at: "2026-03-28"
+    completed_at: "2026-03-28"
+    acceptance_status: "passed"
+    last_checkpoint: "Todos os criterios de aceite validados. 16/16 testes passando."
+    resume_instructions: null
+    completed_items:
+      - "Criar manifest.py com write_manifest() — campos run_id, model, runtime, timing, status, artifacts."
+      - "Exportar write_manifest no pipeline/__init__.py."
+      - "Integrar chamada no cli/main.py apos run_batch."
+      - "Escrever tests/test_manifest.py com 16 testes."
+      - "Validar regressao completa: 154 testes passando."
+    pending_items: []
+    touched_files:
+      - "src/upscale_image/pipeline/manifest.py"
+      - "src/upscale_image/pipeline/__init__.py"
+      - "src/upscale_image/cli/main.py"
+      - "tests/test_manifest.py"
+    tests_run:
+      - "pytest tests/test_manifest.py — 16 passed"
+      - "pytest tests/ — 154 passed (regressao completa)"
+    artifacts:
+      - "src/upscale_image/pipeline/manifest.py"
+      - "tests/test_manifest.py"
+    blocking_reason: null
+  - id: "12"
+    slug: "implementar-tratamento-de-erros"
+    title: "Implementar Tratamento de Erros"
+    prompt_file: "prompt/steps/12-implementar-tratamento-de-erros.md"
+    part_file: "docs/parts/12-implementar-tratamento-de-erros.md"
+    status: "completed"
+    started_at: "2026-03-28"
+    completed_at: "2026-03-28"
+    acceptance_status: "passed"
+    last_checkpoint: "Todos os criterios de aceite validados. 18/18 testes passando."
+    resume_instructions: null
+    completed_items:
+      - "Corrigir CLI: capturar ValueError de run_batch (diretorio inexistente — era traceback raw)."
+      - "Escrever tests/test_error_handling.py cobrindo os 7 cenarios minimos."
+      - "Validar regressao completa: 172 testes passando."
+    pending_items: []
+    touched_files:
+      - "src/upscale_image/cli/main.py"
+      - "tests/test_error_handling.py"
+    tests_run:
+      - "pytest tests/test_error_handling.py — 18 passed"
+      - "pytest tests/ — 172 passed (regressao completa)"
+    artifacts:
+      - "tests/test_error_handling.py"
+    blocking_reason: null
+  - id: "13"
+    slug: "implementar-benchmark-com-referencia"
+    title: "Implementar Benchmark com Referência"
+    prompt_file: "prompt/steps/13-implementar-benchmark-com-referencia.md"
+    part_file: "docs/parts/13-implementar-benchmark-com-referencia.md"
+    status: "completed"
+    started_at: "2026-03-28"
+    completed_at: "2026-03-28"
+    acceptance_status: "passed"
+    last_checkpoint: "Todos os criterios de aceite validados. 24/24 testes passando."
+    resume_instructions: null
+    completed_items:
+      - "Criar metrics/full_reference.py com pareamento por stem, PSNR, SSIM, LPIPS mockavel."
+      - "Persistir per_image.csv e summary.json em metrics_dir."
+      - "Tratar: pares ausentes (no_reference), size_mismatch, load_error."
+      - "Integrar --reference-dir no CLI (opcional, nao aborta em warning)."
+      - "Escrever tests/test_benchmark_fr.py com 24 testes."
+      - "Validar regressao completa: 196 testes passando."
+    pending_items: []
+    touched_files:
+      - "src/upscale_image/metrics/__init__.py"
+      - "src/upscale_image/metrics/full_reference.py"
+      - "src/upscale_image/cli/main.py"
+      - "tests/test_benchmark_fr.py"
+    tests_run:
+      - "pytest tests/test_benchmark_fr.py — 24 passed"
+      - "pytest tests/ — 196 passed (regressao completa)"
+    artifacts:
+      - "src/upscale_image/metrics/full_reference.py"
+      - "tests/test_benchmark_fr.py"
+    blocking_reason: null
+  - id: "14"
+    slug: "implementar-benchmark-sem-referencia"
+    title: "Implementar Benchmark sem Referência"
+    prompt_file: "prompt/steps/14-implementar-benchmark-sem-referencia.md"
+    part_file: "docs/parts/14-implementar-benchmark-sem-referencia.md"
+    status: "completed"
+    started_at: "2026-03-28"
+    completed_at: "2026-03-28"
+    acceptance_status: "passed"
+    last_checkpoint: "Todos os criterios de aceite validados. 18/18 testes passando."
+    resume_instructions: null
+    completed_items:
+      - "Criar metrics/no_reference.py com NiqeResult, NrBenchmarkSummary, run_no_reference_benchmark."
+      - "Persistir niqe_per_image.csv e niqe_summary.json (nomes distintos de FR)."
+      - "Campo mode='no_reference' distingue claramente do modo FR."
+      - "Erros por imagem registrados, nao abortam o benchmark."
+      - "Integrar --benchmark-nr no CLI (opcional, nao aborta em warning)."
+      - "Escrever tests/test_benchmark_nr.py com 18 testes."
+      - "Validar regressao completa: 214 testes passando."
+    pending_items: []
+    touched_files:
+      - "src/upscale_image/metrics/no_reference.py"
+      - "src/upscale_image/metrics/__init__.py"
+      - "src/upscale_image/cli/main.py"
+      - "tests/test_benchmark_nr.py"
+    tests_run:
+      - "pytest tests/test_benchmark_nr.py — 18 passed"
+      - "pytest tests/ — 214 passed (regressao completa)"
+    artifacts:
+      - "src/upscale_image/metrics/no_reference.py"
+      - "tests/test_benchmark_nr.py"
+    blocking_reason: null
+  - id: "15"
+    slug: "implementar-comparacao-entre-rodadas"
+    title: "Implementar Comparação entre Rodadas"
+    prompt_file: "prompt/steps/15-implementar-comparacao-entre-rodadas.md"
+    part_file: "docs/parts/15-implementar-comparacao-entre-rodadas.md"
+    status: "completed"
+    started_at: "2026-03-28"
+    completed_at: "2026-03-28"
+    acceptance_status: "passed"
+    last_checkpoint: "Todos os criterios de aceite validados. 28/28 testes passando."
+    resume_instructions: null
+    completed_items:
+      - "Criar reports/compare.py com RunSnapshot, RunDelta, ComparisonResult."
+      - "load_run_snapshot le manifest.json + metrics opcionais (FR e NR)."
+      - "compare_runs calcula deltas sequenciais (run[i] - run[i-1])."
+      - "comparison_to_dict serializa para JSON rastreavel."
+      - "Comando CLI 'compare' com --output opcional."
+      - "Escrever tests/test_compare.py com 28 testes."
+      - "Validar regressao completa: 242 testes passando."
+    pending_items: []
+    touched_files:
+      - "src/upscale_image/reports/compare.py"
+      - "src/upscale_image/reports/__init__.py"
+      - "src/upscale_image/cli/main.py"
+      - "tests/test_compare.py"
+    tests_run:
+      - "pytest tests/test_compare.py — 28 passed"
+      - "pytest tests/ — 242 passed (regressao completa)"
+    artifacts:
+      - "src/upscale_image/reports/compare.py"
+      - "tests/test_compare.py"
+    blocking_reason: null
+    touched_files: []
+    tests_run: []
+    artifacts: []
+    blocking_reason: null
+  - id: "16"
+    slug: "implementar-relatorio-consolidado"
+    title: "Implementar Relatório Consolidado"
+    prompt_file: "prompt/steps/16-implementar-relatorio-consolidado.md"
+    part_file: "docs/parts/16-implementar-relatorio-consolidado.md"
+    status: "completed"
+    started_at: "2026-03-28"
+    completed_at: "2026-03-28"
+    acceptance_status: "passed"
+    last_checkpoint: "Todos os criterios de aceite validados. 26/26 testes passando."
+    resume_instructions: null
+    completed_items:
+      - "Criar reports/html.py com render_run_report, render_comparison_report, generate_html_report."
+      - "HTML auto-contido (CSS inline, sem dependencias externas)."
+      - "Tabela de comparacao e linha de deltas com codificacao de cor (verde=melhora, vermelho=piora)."
+      - "Placeholder 'na' para metricas ausentes."
+      - "Adicionar comando CLI 'report' com --output."
+      - "Escrever tests/test_html_report.py com 26 testes."
+      - "Validar regressao completa: 268 testes passando."
+    pending_items: []
+    touched_files:
+      - "src/upscale_image/reports/html.py"
+      - "src/upscale_image/reports/__init__.py"
+      - "src/upscale_image/cli/main.py"
+      - "tests/test_html_report.py"
+    tests_run:
+      - "pytest tests/test_html_report.py — 26 passed"
+      - "pytest tests/ — 268 passed (regressao completa)"
+    artifacts:
+      - "src/upscale_image/reports/html.py"
+      - "tests/test_html_report.py"
+    blocking_reason: null
+    touched_files: []
+    tests_run: []
+    artifacts: []
+    blocking_reason: null
+  - id: "17"
+    slug: "integrar-segundo-modelo"
+    title: "Integrar o Segundo Modelo"
+    prompt_file: "prompt/steps/17-integrar-segundo-modelo.md"
+    part_file: "docs/parts/17-integrar-segundo-modelo.md"
+    status: "completed"
+    started_at: "2026-03-28"
+    completed_at: "2026-03-28"
+    acceptance_status: "passed"
+    last_checkpoint: "Todos os criterios de aceite validados. 23/23 testes passando."
+    resume_instructions: null
+    completed_items:
+      - "Criar models/bicubic.py com BicubicRunner (torch.nn.functional.interpolate, modo bicubic)."
+      - "Registrar 'bicubic' no registry default."
+      - "Exportar BicubicRunner em models/__init__.py."
+      - "Escrever tests/test_bicubic_runner.py com 23 testes (contrato, output, registry, pipeline)."
+      - "Validar regressao completa: 291 testes passando."
+    pending_items: []
+    touched_files:
+      - "src/upscale_image/models/bicubic.py"
+      - "src/upscale_image/models/registry.py"
+      - "src/upscale_image/models/__init__.py"
+      - "tests/test_bicubic_runner.py"
+    tests_run:
+      - "pytest tests/test_bicubic_runner.py — 23 passed"
+      - "pytest tests/ — 291 passed (regressao completa)"
+    artifacts:
+      - "src/upscale_image/models/bicubic.py"
+      - "tests/test_bicubic_runner.py"
+    blocking_reason: null
+  - id: "18"
+    slug: "consolidar-testes-automatizados"
+    title: "Consolidar Testes Automatizados"
+    prompt_file: "prompt/steps/18-consolidar-testes-automatizados.md"
+    part_file: "docs/parts/18-consolidar-testes-automatizados.md"
+    status: "completed"
+    started_at: "2026-03-28"
+    completed_at: "2026-03-28"
+    acceptance_status: "passed"
+    last_checkpoint: "Todos os criterios de aceite validados. 23/23 testes de integracao passando. 314 no total."
+    resume_instructions: null
+    completed_items:
+      - "Avaliar cobertura existente: todas as 7 areas minimas cobertas pelos 16 arquivos anteriores (291 testes)."
+      - "Identificar gaps: CLI com imagens reais, exit code 2, contrato manifesto->comparacao, fluxo comparison end-to-end."
+      - "Criar tests/test_integration.py com 23 testes em 4 classes (FullPipelineFlow, CrossModuleContracts, RegistryContract, ComparisonFlow)."
+      - "Validar regressao completa: 314 testes passando."
+    pending_items: []
+    touched_files:
+      - "tests/test_integration.py"
+    tests_run:
+      - "pytest tests/test_integration.py — 23 passed"
+      - "pytest tests/ — 314 passed (regressao completa)"
+    artifacts:
+      - "tests/test_integration.py"
+    blocking_reason: null

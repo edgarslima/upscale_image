@@ -1,0 +1,38 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "upscale-image"
+version = "0.1.0"
+requires-python = ">=3.12"
+description = "Batch image super-resolution CLI with measurable, auditable runs."
+dependencies = [
+    "numpy>=2.3,<2.5",
+    "torch==2.11.0",
+    "torchvision==0.26.0",
+    "opencv-python==4.13.0.92",
+    "Pillow==12.1.1",
+    "typer==0.24.1",
+    "rich==14.3.3",
+    "PyYAML==6.0.3",
+]
+
+[project.scripts]
+upscale-image = "upscale_image.cli.main:run"
+
+[project.optional-dependencies]
+benchmark = [
+    "scikit-image==0.26.0",
+    "pyiqa==0.1.15.post2",
+]
+dev = [
+    "upscale-image[benchmark]",
+    "pytest==9.0.2",
+]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
