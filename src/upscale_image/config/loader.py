@@ -48,6 +48,7 @@ def _apply_cli_overrides(
     model: str | None,
     scale: int | None,
     device: str | None,
+    tile_size: int | None,
 ) -> None:
     """Overwrite config fields with explicitly provided CLI values."""
     if input_dir is not None:
@@ -60,6 +61,8 @@ def _apply_cli_overrides(
         config.model.scale = scale
     if device is not None:
         config.runtime.device = device
+    if tile_size is not None:
+        config.runtime.tile_size = tile_size
 
 
 def _validate(config: AppConfig) -> None:
@@ -106,6 +109,7 @@ def resolve_config(
     scale: int | None = None,
     device: str | None = None,
     config_file: str | None = None,
+    tile_size: int | None = None,
 ) -> AppConfig:
     """Build the final AppConfig applying precedence: CLI > YAML > defaults.
 
@@ -141,6 +145,7 @@ def resolve_config(
         model=model,
         scale=scale,
         device=device,
+        tile_size=tile_size,
     )
 
     _validate(config)

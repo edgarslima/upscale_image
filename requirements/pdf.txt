@@ -1,0 +1,5 @@
+-r base.txt
+pymupdf>=1.24
+
+# Após instalar, use o subcomando pdf para processar arquivos PDF:
+# upscale-image pdf documento.pdf --output runs/ --model realesrgan-x4

@@ -12,6 +12,7 @@ Standard arch for realesrgan-x4: num_feat=64, num_block=23, num_grow_ch=32
 
 from __future__ import annotations
 
+import math
 from pathlib import Path
 
 import numpy as np
@@ -154,7 +155,10 @@ class RealESRGANRunner(SuperResolutionModel):
             tensor = tensor.half()
 
         with torch.inference_mode():
-            output = net(tensor)
+            if config.runtime.tile_size > 0:
+                output = self._upscale_tiled(tensor, net, config)
+            else:
+                output = net(tensor)
 
         # Output tensor [0, 1] → RGB uint8 → BGR uint8
         out_np = (
@@ -179,6 +183,50 @@ class RealESRGANRunner(SuperResolutionModel):
     # ------------------------------------------------------------------
     # Internal helpers
     # ------------------------------------------------------------------
+
+    def _upscale_tiled(
+        self, tensor: torch.Tensor, net: nn.Module, config: "AppConfig"
+    ) -> torch.Tensor:
+        """Process the image in overlapping tiles to reduce VRAM usage."""
+        tile_size = config.runtime.tile_size
+        tile_pad = config.runtime.tile_pad
+        scale = self._scale
+
+        _, channel, height, width = tensor.shape
+        output = tensor.new_zeros(1, channel, height * scale, width * scale)
+
+        tiles_x = math.ceil(width / tile_size)
+        tiles_y = math.ceil(height / tile_size)
+
+        for iy in range(tiles_y):
+            for ix in range(tiles_x):
+                # Tile boundaries in the input
+                in_x1 = ix * tile_size
+                in_x2 = min(in_x1 + tile_size, width)
+                in_y1 = iy * tile_size
+                in_y2 = min(in_y1 + tile_size, height)
+
+                # Padded tile boundaries (clamped to image edges)
+                px1 = max(in_x1 - tile_pad, 0)
+                px2 = min(in_x2 + tile_pad, width)
+                py1 = max(in_y1 - tile_pad, 0)
+                py2 = min(in_y2 + tile_pad, height)
+
+                tile_in = tensor[:, :, py1:py2, px1:px2]
+                with torch.inference_mode():
+                    tile_out = net(tile_in)
+
+                # Crop padding from the output tile
+                cx1 = (in_x1 - px1) * scale
+                cx2 = cx1 + (in_x2 - in_x1) * scale
+                cy1 = (in_y1 - py1) * scale
+                cy2 = cy1 + (in_y2 - in_y1) * scale
+
+                output[:, :, in_y1 * scale:in_y2 * scale, in_x1 * scale:in_x2 * scale] = (
+                    tile_out[:, :, cy1:cy2, cx1:cx2]
+                )
+
+        return output
 
     @staticmethod
     def _resolve_device(device_str: str) -> torch.device:

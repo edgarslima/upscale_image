@@ -47,6 +47,11 @@ Os arquivos foram escritos com base em:
 16. [16-implementar-relatorio-consolidado.md](/home/edgar/dev/upscale_image/docs/parts/16-implementar-relatorio-consolidado.md)
 17. [17-integrar-segundo-modelo.md](/home/edgar/dev/upscale_image/docs/parts/17-integrar-segundo-modelo.md)
 18. [18-consolidar-testes-automatizados.md](/home/edgar/dev/upscale_image/docs/parts/18-consolidar-testes-automatizados.md)
+19. [19-implementar-otimizacao-de-imagens-geradas.md](/home/edgar/dev/upscale_image/docs/parts/19-implementar-otimizacao-de-imagens-geradas.md)
+20. [20-integrar-otimizacao-opcional-ao-upscale.md](/home/edgar/dev/upscale_image/docs/parts/20-integrar-otimizacao-opcional-ao-upscale.md)
+21. [21-suportar-extracao-de-paginas-pdf-para-o-pipeline.md](/home/edgar/dev/upscale_image/docs/parts/21-suportar-extracao-de-paginas-pdf-para-o-pipeline.md)
+22. [22-recompor-pdf-de-saida-e-integrar-origem-pdf-ao-upscale.md](/home/edgar/dev/upscale_image/docs/parts/22-recompor-pdf-de-saida-e-integrar-origem-pdf-ao-upscale.md)
+23. [23-otimizar-paginas-antes-da-recomposicao-do-pdf-final.md](/home/edgar/dev/upscale_image/docs/parts/23-otimizar-paginas-antes-da-recomposicao-do-pdf-final.md)
 
 ## Encadeamento recomendado
 
@@ -54,7 +59,7 @@ Os arquivos foram escritos com base em:
 - Arquitetura de modelos: passos 6 a 8
 - Pipeline operacional: passos 9 a 12
 - Camada analítica: passos 13 a 16
-- Extensibilidade e estabilização: passos 17 e 18
+- Extensibilidade e estabilização: passos 17 a 23
 
 ## Resultado esperado ao final da pasta
 
@@ -66,4 +71,8 @@ Ao concluir todos os arquivos deste diretório, a aplicação deve ser capaz de:
 - calcular métricas de qualidade com e sem referência;
 - comparar execuções;
 - gerar relatórios legíveis;
-- permitir adição de novos modelos sem reestruturar o pipeline.
+- permitir adição de novos modelos sem reestruturar o pipeline;
+- gerar derivados otimizados para distribuição sem perder o output canônico da `run`;
+- encadear a otimização ao `upscale` por parâmetro opcional quando desejado;
+- aceitar PDF como origem explícita, processar páginas e gerar PDF reconstruído como saída;
+- impor orçamento agressivo de tamanho ao PDF reconstruído para mantê-lo compartilhável.

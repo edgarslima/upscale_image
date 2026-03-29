@@ -17,3 +17,4 @@ Toda run deve produzir logs persistidos, configuração efetiva, manifesto técn
 - A run se torna auditável sem depender do terminal.
 - Comparação entre execuções passa a ser baseada em artefatos persistidos.
 - Estruturas de saída precisam ser estáveis para consumo por módulos posteriores.
+- Etapas derivadas, como otimização de imagem, também devem persistir resumo por item e agregado quando executadas.

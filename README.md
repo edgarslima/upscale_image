@@ -57,8 +57,7 @@ Para desativar: `deactivate`
 ### Baixar pesos do Real-ESRGAN
 
 ```bash
-mkdir -p weights
-wget -O weights/realesrgan-x4.pth <url-do-arquivo-pth>
+wget -P weights/ https://github.com/xinntao/Real-ESRGAN/releases/download/v0.1.0/RealESRGAN_x4plus.pth -O weights/realesrgan-x4.pth
 ```
 
 ---

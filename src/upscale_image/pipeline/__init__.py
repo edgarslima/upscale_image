@@ -2,7 +2,13 @@
 
 from upscale_image.pipeline.batch import BatchResult, ItemResult, RunStats, run_batch
 from upscale_image.pipeline.logger import RunLogger, setup_run_logger
-from upscale_image.pipeline.manifest import write_manifest
+from upscale_image.pipeline.manifest import (
+    write_manifest,
+    patch_manifest_with_optimization,
+    patch_manifest_with_pdf_source,
+    patch_manifest_with_pdf_rebuilt,
+    patch_manifest_with_compose_ready,
+)
 from upscale_image.pipeline.run import RunContext, create_run, generate_run_id
 
 __all__ = [
@@ -16,4 +22,8 @@ __all__ = [
     "run_batch",
     "setup_run_logger",
     "write_manifest",
+    "patch_manifest_with_optimization",
+    "patch_manifest_with_pdf_source",
+    "patch_manifest_with_pdf_rebuilt",
+    "patch_manifest_with_compose_ready",
 ]

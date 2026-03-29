@@ -13,3 +13,4 @@ Este diretório registra as decisões arquiteturais relevantes do sistema de sup
 - [0007-stack-tecnologica-principal.md](/home/edgar/dev/upscale_image/docs/adr/0007-stack-tecnologica-principal.md)
 - [0008-avaliacao-de-qualidade-fr-e-nr.md](/home/edgar/dev/upscale_image/docs/adr/0008-avaliacao-de-qualidade-fr-e-nr.md)
 - [0009-relatorios-e-comparacao-entre-runs.md](/home/edgar/dev/upscale_image/docs/adr/0009-relatorios-e-comparacao-entre-runs.md)
+- [0010-otimizacao-derivada-e-nao-destrutiva-dos-outputs.md](/home/edgar/dev/upscale_image/docs/adr/0010-otimizacao-derivada-e-nao-destrutiva-dos-outputs.md)

@@ -1,6 +1,6 @@
 version: 1
 project: upscale_image
-current_step: "18"
+current_step: "23"
 next_step: null
 last_updated: "2026-03-28"
 global_notes:
@@ -563,4 +563,177 @@ steps:
       - "pytest tests/ — 314 passed (regressao completa)"
     artifacts:
       - "tests/test_integration.py"
+    blocking_reason: null
+  - id: "19"
+    slug: "implementar-otimizacao-de-imagens-geradas"
+    title: "Implementar Otimização de Imagens Geradas"
+    prompt_file: "prompt/steps/19-implementar-otimizacao-de-imagens-geradas.md"
+    part_file: "docs/parts/19-implementar-otimizacao-de-imagens-geradas.md"
+    status: "completed"
+    started_at: "2026-03-29"
+    completed_at: "2026-03-29"
+    acceptance_status: "passed"
+    last_checkpoint: "Todos os criterios de aceite validados. 35/35 testes do passo + 349 no total."
+    resume_instructions: null
+    completed_items:
+      - "Criar src/upscale_image/optimize/__init__.py e optimizer.py com OptimizeConfig, ImageOptResult, OptimizeSummary, run_optimization."
+      - "Gerar derivados webp e jpeg em optimized/<fmt>/ sem alterar outputs/*.png."
+      - "Persistir per_image.csv e summary.json com economia por arquivo e agregada."
+      - "Adicionar patch_manifest_with_optimization em pipeline/manifest.py (adiciona chave optimization sem reescrever campos historicos)."
+      - "Exportar patch_manifest_with_optimization em pipeline/__init__.py."
+      - "Adicionar subcomando optimize na CLI com --webp-quality, --jpeg-quality, --format."
+      - "Criar tests/test_optimization.py com 35 testes (config, happy path, csv, json, erros recuperaveis, erros estruturais, manifest, CLI)."
+      - "Validar regressao completa: 349 testes passando."
+    pending_items: []
+    touched_files:
+      - "src/upscale_image/optimize/__init__.py"
+      - "src/upscale_image/optimize/optimizer.py"
+      - "src/upscale_image/pipeline/manifest.py"
+      - "src/upscale_image/pipeline/__init__.py"
+      - "src/upscale_image/cli/main.py"
+      - "tests/test_optimization.py"
+    tests_run:
+      - "pytest tests/test_optimization.py — 35 passed"
+      - "pytest tests/ — 349 passed (regressao completa)"
+    artifacts:
+      - "src/upscale_image/optimize/__init__.py"
+      - "src/upscale_image/optimize/optimizer.py"
+      - "tests/test_optimization.py"
+    blocking_reason: null
+  - id: "20"
+    slug: "integrar-otimizacao-opcional-ao-upscale"
+    title: "Integrar Otimização Opcional ao Upscale"
+    prompt_file: "prompt/steps/20-integrar-otimizacao-opcional-ao-upscale.md"
+    part_file: "docs/parts/20-integrar-otimizacao-opcional-ao-upscale.md"
+    status: "completed"
+    started_at: "2026-03-29"
+    completed_at: "2026-03-29"
+    acceptance_status: "passed"
+    last_checkpoint: "Todos os criterios de aceite validados. 17/17 testes do passo + 366 no total."
+    resume_instructions: null
+    completed_items:
+      - "Adicionar --optimize, --opt-webp-quality, --opt-jpeg-quality, --opt-format ao comando upscale."
+      - "Reestruturar finally block: logger.close() movido para apos a otimizacao."
+      - "Encadear run_optimization + patch_manifest_with_optimization apos write_manifest."
+      - "Registrar no log da run: inicio, preset, resultado agregado e falhas parciais."
+      - "Comportamento sem --optimize identico ao anterior (sem optimized/, sem chave no manifesto)."
+      - "Criar tests/test_optimize_chained.py com 17 testes."
+      - "Validar regressao completa: 366 testes passando."
+    pending_items: []
+    touched_files:
+      - "src/upscale_image/cli/main.py"
+      - "tests/test_optimize_chained.py"
+    tests_run:
+      - "pytest tests/test_optimize_chained.py — 17 passed"
+      - "pytest tests/ — 366 passed (regressao completa)"
+    artifacts:
+      - "tests/test_optimize_chained.py"
+    blocking_reason: null
+  - id: "21"
+    slug: "suportar-extracao-de-paginas-pdf-para-o-pipeline"
+    title: "Suportar Extração de Páginas PDF para o Pipeline"
+    prompt_file: "prompt/steps/21-suportar-extracao-de-paginas-pdf-para-o-pipeline.md"
+    part_file: "docs/parts/21-suportar-extracao-de-paginas-pdf-para-o-pipeline.md"
+    status: "completed"
+    started_at: "2026-03-29"
+    completed_at: "2026-03-29"
+    acceptance_status: "passed"
+    last_checkpoint: "Todos os criterios de aceite validados. 26/26 testes do passo + 392 no total."
+    resume_instructions: null
+    completed_items:
+      - "Criar src/upscale_image/pdf/__init__.py e extractor.py com PdfExtractionConfig, PdfPageInfo, PdfExtractionResult, extract_pdf_pages usando pymupdf."
+      - "Extrair paginas em page-NNNN.png com ordenacao deterministica dentro de run_dir/pdf/extracted_pages/."
+      - "Copiar PDF original para run_dir/pdf/source/ (ADR 0002)."
+      - "Adicionar patch_manifest_with_pdf_source em pipeline/manifest.py."
+      - "Exportar patch_manifest_with_pdf_source em pipeline/__init__.py."
+      - "Adicionar subcomando pdf na CLI: --pdf-file, --output, --model, --scale, --device, --tile-size, --dpi, --optimize."
+      - "Reutilizar pipeline batch existente apos override de cfg.input_dir com paginas extraidas."
+      - "Criar requirements/pdf.txt com pymupdf."
+      - "Criar tests/test_pdf_extraction.py com 26 testes."
+      - "Validar regressao completa: 392 testes passando."
+    pending_items: []
+    touched_files:
+      - "src/upscale_image/pdf/__init__.py"
+      - "src/upscale_image/pdf/extractor.py"
+      - "src/upscale_image/pipeline/manifest.py"
+      - "src/upscale_image/pipeline/__init__.py"
+      - "src/upscale_image/cli/main.py"
+      - "requirements/pdf.txt"
+      - "tests/test_pdf_extraction.py"
+    tests_run:
+      - "pytest tests/test_pdf_extraction.py — 26 passed"
+      - "pytest tests/ — 392 passed (regressao completa)"
+    artifacts:
+      - "src/upscale_image/pdf/__init__.py"
+      - "src/upscale_image/pdf/extractor.py"
+      - "requirements/pdf.txt"
+      - "tests/test_pdf_extraction.py"
+    blocking_reason: null
+  - id: "22"
+    slug: "recompor-pdf-de-saida-e-integrar-origem-pdf-ao-upscale"
+    title: "Recompor PDF de Saída e Integrar Origem PDF ao Upscale"
+    prompt_file: "prompt/steps/22-recompor-pdf-de-saida-e-integrar-origem-pdf-ao-upscale.md"
+    part_file: "docs/parts/22-recompor-pdf-de-saida-e-integrar-origem-pdf-ao-upscale.md"
+    status: "completed"
+    started_at: "2026-03-29"
+    completed_at: "2026-03-29"
+    acceptance_status: "passed"
+    last_checkpoint: "Todos os criterios de aceite validados. 27/27 testes do passo + 419 no total."
+    resume_instructions: null
+    completed_items:
+      - "Criar src/upscale_image/pdf/composer.py com compose_pdf_from_pages (paginas em ordem, stem customizavel)."
+      - "Atualizar src/upscale_image/pdf/__init__.py para exportar PdfComposeResult e compose_pdf_from_pages."
+      - "Adicionar patch_manifest_with_pdf_rebuilt em pipeline/manifest.py e exportar em __init__.py."
+      - "Estender upscale CLI: input_dir torna-se opcional, --pdf-file ativa modo PDF."
+      - "Validacao de exclusividade: erro claro quando ambos ou nenhum sao fornecidos."
+      - "Encadeamento completo no upscale: extracao → batch → manifesto → otimizacao opcional → recomposicao PDF."
+      - "Criar tests/test_pdf_compose.py com 27 testes."
+      - "Validar regressao completa: 419 testes passando."
+    pending_items: []
+    touched_files:
+      - "src/upscale_image/pdf/composer.py"
+      - "src/upscale_image/pdf/__init__.py"
+      - "src/upscale_image/pipeline/manifest.py"
+      - "src/upscale_image/pipeline/__init__.py"
+      - "src/upscale_image/cli/main.py"
+      - "tests/test_pdf_compose.py"
+    tests_run:
+      - "pytest tests/test_pdf_compose.py — 27 passed"
+      - "pytest tests/ — 419 passed (regressao completa)"
+    artifacts:
+      - "src/upscale_image/pdf/composer.py"
+      - "tests/test_pdf_compose.py"
+    blocking_reason: null
+  - id: "23"
+    slug: "otimizar-paginas-antes-da-recomposicao-do-pdf-final"
+    title: "Otimizar Páginas Antes da Recomposição do PDF Final"
+    prompt_file: "prompt/steps/23-otimizar-paginas-antes-da-recomposicao-do-pdf-final.md"
+    part_file: "docs/parts/23-otimizar-paginas-antes-da-recomposicao-do-pdf-final.md"
+    status: "completed"
+    started_at: "2026-03-28"
+    completed_at: "2026-03-28"
+    acceptance_status: "passed"
+    last_checkpoint: "451 testes passando. Todos os criterios de aceite validados."
+    resume_instructions: null
+    completed_items:
+      - "Criar camada compose_ready_pages para preparar paginas antes da composicao do PDF."
+      - "Definir orcamento padrao de tamanho final como 2x o tamanho do PDF original."
+      - "Implementar compressao progressiva por pagina antes da recomposicao."
+      - "Registrar alvo e resultado de tamanho no manifesto e nos logs."
+      - "Cobrir testes de sucesso dentro do orcamento e falha/degradacao fora dele."
+    pending_items: []
+    touched_files:
+      - "src/upscale_image/pdf/page_preparer.py"
+      - "src/upscale_image/pdf/__init__.py"
+      - "src/upscale_image/pdf/composer.py"
+      - "src/upscale_image/pipeline/manifest.py"
+      - "src/upscale_image/pipeline/__init__.py"
+      - "src/upscale_image/cli/main.py"
+      - "tests/test_page_preparer.py"
+    tests_run:
+      - "pytest tests/test_page_preparer.py (32 passed)"
+      - "pytest (451 passed, suíte completa)"
+    artifacts:
+      - "src/upscale_image/pdf/page_preparer.py"
+      - "tests/test_page_preparer.py"
     blocking_reason: null

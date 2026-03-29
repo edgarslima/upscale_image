@@ -16,5 +16,6 @@ Persistir todos os artefatos em filesystem, encapsulando cada execução em `run
 
 - Cada run terá isolamento claro.
 - Logs, manifesto, métricas e outputs ficam co-localizados.
+- Artefatos derivados posteriores, como otimizações de imagem, também devem permanecer dentro da mesma `run`, em árvore própria.
 - O filesystem passa a ser a fonte primária de verdade da execução.
 - O projeto evita dependência inicial de banco ou serviços externos.
