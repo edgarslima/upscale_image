@@ -1,0 +1,2 @@
+-r base.txt
+torch-tensorrt==2.11.0

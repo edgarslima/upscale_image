@@ -27,7 +27,7 @@ def test_defaults_pure():
     assert cfg.runtime.device == "cpu"
     assert cfg.runtime.precision == "fp32"
     assert cfg.runtime.tile_size == 0
-    assert cfg.runtime.tile_pad == 10
+    assert cfg.runtime.tile_pad == 32
 
 
 # ---------------------------------------------------------------------------

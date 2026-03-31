@@ -1,8 +1,8 @@
 version: 1
 project: upscale_image
-current_step: "23"
+current_step: "29"
 next_step: null
-last_updated: "2026-03-28"
+last_updated: "2026-03-30"
 global_notes:
   - "Seguir a especificacao tecnica e as ADRs como fonte principal."
   - "Executar apenas um passo por vez."
@@ -736,4 +736,218 @@ steps:
     artifacts:
       - "src/upscale_image/pdf/page_preparer.py"
       - "tests/test_page_preparer.py"
+    blocking_reason: null
+  - id: "24"
+    slug: "fase1-quick-wins-compilacao-amp-tile"
+    title: "Fase 1 — Quick Wins: Compilação de Modelo, AMP Automático e Tile Pad"
+    prompt_file: "prompt/steps/24-fase1-quick-wins-compilacao-amp-tile.md"
+    part_file: "docs/parts/24-fase1-quick-wins-compilacao-amp-tile.md"
+    status: "completed"
+    started_at: "2026-03-29"
+    completed_at: "2026-03-29"
+    acceptance_status: "passed"
+    last_checkpoint: "Todos os criterios de aceite validados. 19 novos testes + 470 no total passando."
+    resume_instructions: null
+    completed_items:
+      - "Corrigir tile_pad default de 10 para 32 em config/schema.py."
+      - "Adicionar cudnn.benchmark e torch.compile (com fallback eager) em RealESRGANRunner.load()."
+      - "Substituir AMP manual por torch.autocast em RealESRGANRunner.upscale()."
+      - "Reescrever _upscale_tiled() com acumulacao ponderada por janela de Hann."
+      - "Adicionar metodo estatico _hann_window()."
+      - "Atualizar tests/test_config.py (tile_pad 10->32)."
+      - "Criar tests/test_quickwins.py com 19 testes."
+      - "Executar pytest tests/ — 470 passed (regressao completa)."
+    pending_items: []
+    touched_files:
+      - "src/upscale_image/config/schema.py"
+      - "src/upscale_image/models/realesrgan.py"
+      - "tests/test_config.py"
+      - "tests/test_quickwins.py"
+    tests_run:
+      - "pytest tests/test_config.py — 15 passed"
+      - "pytest tests/test_realesrgan_runner.py — 17 passed"
+      - "pytest tests/test_quickwins.py — 19 passed"
+      - "pytest tests/ — 470 passed (regressao completa)"
+    artifacts:
+      - "tests/test_quickwins.py"
+    blocking_reason: null
+  - id: "25"
+    slug: "fase2-pipeline-assincrono-com-prefetch"
+    title: "Fase 2 — Pipeline Assíncrono com Prefetch de I/O"
+    prompt_file: "prompt/steps/25-fase2-pipeline-assincrono-com-prefetch.md"
+    part_file: "docs/parts/25-fase2-pipeline-assincrono-com-prefetch.md"
+    status: "completed"
+    started_at: "2026-03-29"
+    completed_at: "2026-03-29"
+    acceptance_status: "passed"
+    last_checkpoint: "Todos os criterios de aceite validados. 11/11 testes novos passando. 481 total."
+    resume_instructions: null
+    completed_items:
+      - "Criar src/upscale_image/pipeline/async_worker.py com run_batch_async()."
+      - "Adicionar parametros async_io, prefetch_size, write_workers em pipeline/batch.py."
+      - "Adicionar campos async_io, prefetch_size, write_workers em config/schema.py."
+      - "Adicionar flags --async-io e --prefetch em cli/main.py."
+      - "Criar tests/test_async_worker.py (11 testes)."
+      - "Executar pytest tests/ — 481 passed, zero regressao."
+    pending_items: []
+    touched_files:
+      - "src/upscale_image/pipeline/async_worker.py"
+      - "src/upscale_image/pipeline/batch.py"
+      - "src/upscale_image/config/schema.py"
+      - "src/upscale_image/cli/main.py"
+      - "tests/test_async_worker.py"
+    tests_run:
+      - "pytest tests/test_async_worker.py — 11 passed"
+      - "pytest tests/test_batch.py — regressao serial OK"
+      - "pytest tests/ — 481 passed (regressao completa)"
+    artifacts:
+      - "src/upscale_image/pipeline/async_worker.py"
+      - "tests/test_async_worker.py"
+    blocking_reason: null
+  - id: "26"
+    slug: "fase3-batch-inference-real"
+    title: "Fase 3 — Batch Inference Real (batch_size > 1)"
+    prompt_file: "prompt/steps/26-fase3-batch-inference-real.md"
+    part_file: "docs/parts/26-fase3-batch-inference-real.md"
+    status: "completed"
+    started_at: "2026-03-29"
+    completed_at: "2026-03-29"
+    acceptance_status: "passed"
+    last_checkpoint: "Todos os criterios de aceite validados. 18/18 testes novos passando. 499 total."
+    resume_instructions: null
+    completed_items:
+      - "Adicionar upscale_batch() com default em models/base.py."
+      - "Sobrescrever upscale_batch() em models/realesrgan.py com padding, forward pass unico e corte."
+      - "Implementar group_tasks_by_size() e estimate_safe_batch_size() em pipeline/batch.py."
+      - "Integrar batching na thread de inferencia de async_worker.py (batch_size param)."
+      - "Adicionar batch_size em config/schema.py e --batch-size em cli/main.py."
+      - "Criar tests/test_batch_inference.py (18 testes)."
+      - "Executar pytest tests/ — 499 passed, zero regressao."
+    pending_items: []
+    touched_files:
+      - "src/upscale_image/models/base.py"
+      - "src/upscale_image/models/realesrgan.py"
+      - "src/upscale_image/pipeline/batch.py"
+      - "src/upscale_image/pipeline/async_worker.py"
+      - "src/upscale_image/config/schema.py"
+      - "src/upscale_image/cli/main.py"
+      - "tests/test_batch_inference.py"
+    tests_run:
+      - "pytest tests/test_batch_inference.py — 18 passed"
+      - "pytest tests/test_async_worker.py — regressao Fase 2 OK"
+      - "pytest tests/ — 499 passed (regressao completa)"
+    artifacts:
+      - "src/upscale_image/pipeline/async_worker.py (refatorado com _run_inference_serial/_run_inference_batched)"
+      - "tests/test_batch_inference.py"
+    blocking_reason: null
+  - id: "27"
+    slug: "integrar-modelo-swinir"
+    title: "Integrar Modelo SwinIR"
+    prompt_file: "prompt/steps/27-integrar-modelo-swinir.md"
+    part_file: "docs/parts/27-integrar-modelo-swinir.md"
+    status: "completed"
+    started_at: "2026-03-29"
+    completed_at: "2026-03-29"
+    acceptance_status: "passed"
+    last_checkpoint: "Todos os criterios de aceite validados. 16/16 testes novos passando. 515 total."
+    resume_instructions: null
+    completed_items:
+      - "Criar requirements/swinir.txt com timm>=1.0.0."
+      - "Atualizar pyproject.toml com optional extra swinir = ['timm>=1.0.0']."
+      - "Criar src/upscale_image/models/swinir_runner.py com padding window_size=8 e fallback eager."
+      - "Adicionar registro condicional em models/registry.py (try/except ImportError)."
+      - "Criar tests/test_swinir_runner.py (16 testes, todos com mocks)."
+      - "Executar pytest tests/ — 515 passed, zero regressao."
+    pending_items: []
+    touched_files:
+      - "requirements/swinir.txt"
+      - "pyproject.toml"
+      - "src/upscale_image/models/swinir_runner.py"
+      - "src/upscale_image/models/registry.py"
+      - "tests/test_swinir_runner.py"
+    tests_run:
+      - "pytest tests/test_swinir_runner.py — 16 passed"
+      - "pytest tests/test_registry.py — regressao registry OK"
+      - "pytest tests/ — 515 passed (regressao completa)"
+    artifacts:
+      - "src/upscale_image/models/swinir_runner.py"
+      - "requirements/swinir.txt"
+      - "tests/test_swinir_runner.py"
+    blocking_reason: null
+  - id: "28"
+    slug: "fase4-backend-inferencia-plugavel"
+    title: "Fase 4 — Backend de Inferência Plugável (TensorRT / ONNX Runtime)"
+    prompt_file: "prompt/steps/28-fase4-backend-inferencia-plugavel.md"
+    part_file: "docs/parts/28-fase4-backend-inferencia-plugavel.md"
+    status: "completed"
+    started_at: "2026-03-29"
+    completed_at: "2026-03-29"
+    acceptance_status: "passed"
+    last_checkpoint: "Todos os criterios de aceite validados. 31/31 testes novos passando. 546 total."
+    resume_instructions: null
+    completed_items:
+      - "Criar requirements/performance.txt com torch-tensorrt==2.11.0."
+      - "Atualizar pyproject.toml com optional extras performance e onnx."
+      - "Criar src/upscale_image/models/tensorrt_runner.py (import torch_tensorrt apenas em load())."
+      - "Criar src/upscale_image/models/onnx_runner.py (pipeline numpy puro, sem torch em inference)."
+      - "Criar scripts/export_tensorrt.py e scripts/export_onnx.py com CLI documentada."
+      - "Adicionar registros condicionais TRT (fp16, fp32) e ONNX (cuda, cpu) em models/registry.py."
+      - "Criar tests/test_tensorrt_runner.py (14 testes) e tests/test_onnx_runner.py (17 testes)."
+      - "Executar pytest tests/ — 546 passed, zero regressao."
+    pending_items: []
+    touched_files:
+      - "requirements/performance.txt"
+      - "pyproject.toml"
+      - "src/upscale_image/models/tensorrt_runner.py"
+      - "src/upscale_image/models/onnx_runner.py"
+      - "src/upscale_image/models/registry.py"
+      - "scripts/export_tensorrt.py"
+      - "scripts/export_onnx.py"
+      - "tests/test_tensorrt_runner.py"
+      - "tests/test_onnx_runner.py"
+    tests_run:
+      - "pytest tests/test_tensorrt_runner.py — 14 passed"
+      - "pytest tests/test_onnx_runner.py — 17 passed"
+      - "pytest tests/test_registry.py — regressao registry OK"
+      - "pytest tests/ — 546 passed (regressao completa)"
+    artifacts:
+      - "src/upscale_image/models/tensorrt_runner.py"
+      - "src/upscale_image/models/onnx_runner.py"
+      - "scripts/export_tensorrt.py"
+      - "scripts/export_onnx.py"
+      - "requirements/performance.txt"
+      - "tests/test_tensorrt_runner.py"
+      - "tests/test_onnx_runner.py"
+    blocking_reason: null
+  - id: "29"
+    slug: "fase5-multi-gpu-worker-pool"
+    title: "Fase 5 — Multi-GPU com Worker Pool"
+    prompt_file: "prompt/steps/29-fase5-multi-gpu-worker-pool.md"
+    part_file: "docs/parts/29-fase5-multi-gpu-worker-pool.md"
+    status: "completed"
+    started_at: "2026-03-30"
+    completed_at: "2026-03-30"
+    acceptance_status: "passed"
+    last_checkpoint: "Todos os criterios de aceite validados. 17/17 testes novos passando. 563 total."
+    resume_instructions: null
+    completed_items:
+      - "Criar src/upscale_image/pipeline/multi_gpu.py com _gpu_worker e run_batch_multi_gpu."
+      - "Adicionar multi_gpu e gpu_ids em config/schema.py."
+      - "Adicionar branch multi_gpu em pipeline/batch.py."
+      - "Adicionar --multi-gpu em cli/main.py com validacao e aviso para < 2 GPUs."
+      - "Criar tests/test_multi_gpu.py com 17 testes via mocks de CUDA e multiprocessing."
+      - "Executar pytest tests/ — 563 passed, zero regressao."
+    pending_items: []
+    touched_files:
+      - "src/upscale_image/pipeline/multi_gpu.py"
+      - "src/upscale_image/config/schema.py"
+      - "src/upscale_image/pipeline/batch.py"
+      - "src/upscale_image/cli/main.py"
+      - "tests/test_multi_gpu.py"
+    tests_run:
+      - "pytest tests/test_multi_gpu.py — 17 passed"
+      - "pytest tests/ — 563 passed (regressao completa)"
+    artifacts:
+      - "src/upscale_image/pipeline/multi_gpu.py"
+      - "tests/test_multi_gpu.py"
     blocking_reason: null

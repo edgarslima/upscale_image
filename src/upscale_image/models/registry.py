@@ -154,3 +154,61 @@ _default_registry.register(
         weights_path=f"weights/realesrgan-x4.pth",
     ),
 )
+
+# SwinIR is optional: only registered when the swinir package and timm are installed.
+try:
+    from upscale_image.models.swinir_runner import SwinIRRunner  # noqa: E402
+
+    _default_registry.register(
+        "swinir-x4",
+        lambda scale: SwinIRRunner(scale=scale),
+    )
+except ImportError:
+    pass  # swinir / timm not installed — runner not available
+
+# TensorRT runners — optional; require torch-tensorrt and NVIDIA GPU (ADR 0014).
+# torch-tensorrt and onnxruntime-gpu must NOT coexist in the same environment.
+try:
+    from upscale_image.models.tensorrt_runner import TensorRTRunner  # noqa: E402
+
+    _default_registry.register(
+        "realesrgan-x4-trt-fp16",
+        lambda scale: TensorRTRunner(
+            scale=scale,
+            engine_path="weights/realesrgan-x4-trt-fp16.ep",
+            precision="fp16",
+        ),
+    )
+    _default_registry.register(
+        "realesrgan-x4-trt-fp32",
+        lambda scale: TensorRTRunner(
+            scale=scale,
+            engine_path="weights/realesrgan-x4-trt-fp32.ep",
+            precision="fp32",
+        ),
+    )
+except ImportError:
+    pass  # torch-tensorrt not installed — TRT runners not available
+
+# ONNX Runtime runners — optional; cross-vendor (NVIDIA, AMD, Intel, CPU).
+try:
+    from upscale_image.models.onnx_runner import OnnxRunner  # noqa: E402
+
+    _default_registry.register(
+        "realesrgan-x4-onnx-cuda",
+        lambda scale: OnnxRunner(
+            scale=scale,
+            onnx_path="weights/realesrgan-x4.onnx",
+            provider="CUDAExecutionProvider",
+        ),
+    )
+    _default_registry.register(
+        "realesrgan-x4-onnx-cpu",
+        lambda scale: OnnxRunner(
+            scale=scale,
+            onnx_path="weights/realesrgan-x4.onnx",
+            provider="CPUExecutionProvider",
+        ),
+    )
+except ImportError:
+    pass  # onnxruntime not installed — ONNX runners not available

@@ -112,6 +112,27 @@ def upscale(
         "--pdf-budget-ratio",
         help="Maximum allowed size ratio of rebuilt PDF vs original (default 2.0 = 2×).",
     ),
+    async_io: bool = typer.Option(
+        False,
+        "--async-io",
+        help="Overlap disk I/O and GPU inference (producer-consumer pipeline).",
+    ),
+    prefetch: int = typer.Option(
+        4,
+        "--prefetch",
+        help="Number of images to prefetch from disk (only used with --async-io).",
+    ),
+    batch_size: int = typer.Option(
+        1,
+        "--batch-size",
+        "-b",
+        help="Images per GPU forward pass. 0 = auto-detect by VRAM (requires --async-io).",
+    ),
+    multi_gpu: bool = typer.Option(
+        False,
+        "--multi-gpu",
+        help="Distribute tasks across all available CUDA GPUs (requires 2+ GPUs).",
+    ),
     reference_dir: str = typer.Option(
         None,
         "--reference-dir",
@@ -156,6 +177,21 @@ def upscale(
     except (ValueError, FileNotFoundError) as exc:
         console.print(f"[red]Configuration error:[/red] {exc}")
         raise typer.Exit(1) from exc
+
+    # --- Multi-GPU validation ---
+    if multi_gpu:
+        try:
+            import torch as _torch
+            _n_gpus = _torch.cuda.device_count()
+        except ImportError:
+            _n_gpus = 0
+        if _n_gpus < 2:
+            console.print(
+                f"[yellow]Warning:[/yellow] --multi-gpu requested but only "
+                f"{_n_gpus} CUDA GPU(s) detected — continuing in single-GPU mode."
+            )
+        else:
+            cfg.runtime.multi_gpu = True
 
     # --- Run setup ---
     try:
@@ -210,7 +246,12 @@ def upscale(
     # --- Batch ---
     batch = None
     try:
-        batch = run_batch(cfg, ctx, sr_model, logger)
+        batch = run_batch(
+            cfg, ctx, sr_model, logger,
+            async_io=async_io,
+            prefetch_size=prefetch,
+            batch_size=batch_size,
+        )
     except ValueError as exc:
         logger.error(f"Fatal error during run: {exc}")
         logger.close()

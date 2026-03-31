@@ -15,6 +15,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 import cv2
+import numpy as np
 
 from upscale_image.config import AppConfig
 from upscale_image.io import DiscoveryResult, SkippedFile, discover_images
@@ -22,9 +23,6 @@ from upscale_image.io.task import ImageTask
 from upscale_image.models.base import SuperResolutionModel
 from upscale_image.pipeline.logger import RunLogger
 from upscale_image.pipeline.run import RunContext
-
-if TYPE_CHECKING:
-    import numpy as np
 
 
 # ---------------------------------------------------------------------------
@@ -126,12 +124,20 @@ def run_batch(
     ctx: RunContext,
     model: SuperResolutionModel,
     logger: RunLogger,
+    async_io: bool = False,
+    prefetch_size: int = 4,
+    write_workers: int = 2,
+    batch_size: int = 1,
 ) -> BatchResult:
     """Run the full batch inference loop.
 
     Discovers input images, processes each one with *model*, and writes
     outputs to ``ctx.outputs_dir``.  Per-item failures are isolated: the
     loop continues and the failed task is recorded with ``status="failed"``.
+
+    When *async_io* is True, I/O and inference are overlapped using a
+    producer-consumer pipeline (ADR 0013). The serial path (async_io=False)
+    is unchanged.
 
     Returns:
         BatchResult with per-item outcomes, skipped-file records and
@@ -148,13 +154,45 @@ def run_batch(
     )
     logger.log_skipped_files(discovery.skipped)
 
-    results: list[ItemResult] = []
     run_start = time.monotonic()
 
-    for task in discovery.tasks:
-        logger.log_item_start(task)
-        item = _process_task(task, model, config, logger)
-        results.append(item)
+    if config.runtime.multi_gpu:
+        try:
+            import torch
+            n_gpus = torch.cuda.device_count()
+        except ImportError:
+            n_gpus = 0
+
+        if n_gpus > 1:
+            from upscale_image.pipeline.multi_gpu import run_batch_multi_gpu
+            gpu_ids = config.runtime.gpu_ids or None
+            results = run_batch_multi_gpu(
+                config, discovery.tasks, lambda: model, gpu_ids=gpu_ids
+            )
+        else:
+            logger.warning(
+                "multi_gpu requested but fewer than 2 CUDA GPUs detected "
+                f"({n_gpus} available) — falling back to single-GPU mode."
+            )
+            results = []
+            for task in discovery.tasks:
+                logger.log_item_start(task)
+                item = _process_task(task, model, config, logger)
+                results.append(item)
+    elif async_io:
+        from upscale_image.pipeline.async_worker import run_batch_async
+        results = run_batch_async(
+            config, discovery.tasks, model, logger,
+            prefetch_size=prefetch_size,
+            write_workers=write_workers,
+            batch_size=batch_size,
+        )
+    else:
+        results = []
+        for task in discovery.tasks:
+            logger.log_item_start(task)
+            item = _process_task(task, model, config, logger)
+            results.append(item)
 
     total_elapsed = time.monotonic() - run_start
     batch = BatchResult(
@@ -245,6 +283,113 @@ def _process_task(
             output_height=output_h,
             error=str(exc),
         )
+
+
+def group_tasks_by_size(
+    tasks: list[ImageTask],
+    batch_size: int,
+    size_tolerance: float = 0.2,
+) -> list[list[ImageTask]]:
+    """Group tasks into batches of similar image dimensions to minimise padding.
+
+    Strategy:
+    1. Read each image's dimensions from its header (no pixel decode).
+    2. Sort tasks by area (largest first) so the biggest images anchor each group.
+    3. Accumulate tasks into a group while the area stays within *size_tolerance*
+       (±20% by default) of the group's anchor; start a new group when the
+       count reaches *batch_size* or the size diverges too far.
+
+    Args:
+        tasks:          Ordered list of ImageTask.
+        batch_size:     Maximum tasks per group (≥ 1).
+        size_tolerance: Fractional area tolerance within a group (0.0–1.0).
+
+    Returns:
+        List of groups (each group is a list of ImageTask). Groups preserve
+        internal similarity but the overall order may differ from *tasks*.
+    """
+    if batch_size <= 1:
+        return [[t] for t in tasks]
+
+    from PIL import Image as _PILImage
+
+    # Read (w, h) for each task without decoding pixels
+    sizes: list[tuple[ImageTask, int]] = []
+    for task in tasks:
+        try:
+            with _PILImage.open(task.input_path) as img:
+                w, h = img.size
+            area = w * h
+        except Exception:
+            area = 0  # unreadable images land at the end; sorted separately
+        sizes.append((task, area))
+
+    sizes.sort(key=lambda x: x[1], reverse=True)
+
+    groups: list[list[ImageTask]] = []
+    current_group: list[ImageTask] = []
+    anchor_area: int = 0
+
+    for task, area in sizes:
+        if not current_group:
+            current_group.append(task)
+            anchor_area = area
+        elif (
+            len(current_group) < batch_size
+            and anchor_area > 0
+            and abs(area - anchor_area) / anchor_area <= size_tolerance
+        ):
+            current_group.append(task)
+        else:
+            groups.append(current_group)
+            current_group = [task]
+            anchor_area = area
+
+    if current_group:
+        groups.append(current_group)
+
+    return groups
+
+
+def estimate_safe_batch_size(
+    sample_image: np.ndarray,
+    model: SuperResolutionModel,
+    config: AppConfig,
+    safety_factor: float = 0.7,
+) -> int:
+    """Estimate the maximum safe batch_size based on available VRAM.
+
+    Returns 1 when CUDA is not available (CPU doesn't benefit from batching).
+
+    Args:
+        sample_image:  Representative image (shape used for estimation).
+        model:         Loaded SuperResolutionModel (provides scale).
+        config:        Resolved AppConfig (provides model scale).
+        safety_factor: Fraction of available VRAM to use (default 0.7).
+
+    Returns:
+        Estimated safe batch size (always ≥ 1).
+    """
+    try:
+        import torch
+    except ImportError:
+        return 1
+
+    if not torch.cuda.is_available():
+        return 1
+
+    total_vram = torch.cuda.get_device_properties(0).total_memory
+    free_vram = total_vram - torch.cuda.memory_allocated(0)
+    usable = int(free_vram * safety_factor)
+
+    h, w, c = sample_image.shape
+    scale = config.model.scale
+    # RRDBNet x4 uses roughly 8× the input tensor size in VRAM during forward
+    bytes_per_image = h * w * c * 4 * 8 * (scale ** 2)
+    if bytes_per_image == 0:
+        return 1
+
+    return max(1, usable // bytes_per_image)
 
 
 def _save_output(image: "np.ndarray", output_path: str) -> None:

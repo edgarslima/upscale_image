@@ -9,6 +9,7 @@ Os arquivos foram escritos com base em:
 - `docs/propósito_aplicação.md`
 - `docs/passos_execução.md`
 - `docs/especificação_tecnica.md`
+- `docs/plano_otimizacao.md`
 
 ## Como usar esta pasta
 
@@ -52,6 +53,12 @@ Os arquivos foram escritos com base em:
 21. [21-suportar-extracao-de-paginas-pdf-para-o-pipeline.md](/home/edgar/dev/upscale_image/docs/parts/21-suportar-extracao-de-paginas-pdf-para-o-pipeline.md)
 22. [22-recompor-pdf-de-saida-e-integrar-origem-pdf-ao-upscale.md](/home/edgar/dev/upscale_image/docs/parts/22-recompor-pdf-de-saida-e-integrar-origem-pdf-ao-upscale.md)
 23. [23-otimizar-paginas-antes-da-recomposicao-do-pdf-final.md](/home/edgar/dev/upscale_image/docs/parts/23-otimizar-paginas-antes-da-recomposicao-do-pdf-final.md)
+24. [24-fase1-quick-wins-compilacao-amp-tile.md](/home/edgar/dev/upscale_image/docs/parts/24-fase1-quick-wins-compilacao-amp-tile.md)
+25. [25-fase2-pipeline-assincrono-com-prefetch.md](/home/edgar/dev/upscale_image/docs/parts/25-fase2-pipeline-assincrono-com-prefetch.md)
+26. [26-fase3-batch-inference-real.md](/home/edgar/dev/upscale_image/docs/parts/26-fase3-batch-inference-real.md)
+27. [27-integrar-modelo-swinir.md](/home/edgar/dev/upscale_image/docs/parts/27-integrar-modelo-swinir.md)
+28. [28-fase4-backend-inferencia-plugavel.md](/home/edgar/dev/upscale_image/docs/parts/28-fase4-backend-inferencia-plugavel.md)
+29. [29-fase5-multi-gpu-worker-pool.md](/home/edgar/dev/upscale_image/docs/parts/29-fase5-multi-gpu-worker-pool.md)
 
 ## Encadeamento recomendado
 
@@ -60,6 +67,7 @@ Os arquivos foram escritos com base em:
 - Pipeline operacional: passos 9 a 12
 - Camada analítica: passos 13 a 16
 - Extensibilidade e estabilização: passos 17 a 23
+- Otimização de performance (plano_otimizacao.md): passos 24 a 29
 
 ## Resultado esperado ao final da pasta
 
@@ -75,4 +83,10 @@ Ao concluir todos os arquivos deste diretório, a aplicação deve ser capaz de:
 - gerar derivados otimizados para distribuição sem perder o output canônico da `run`;
 - encadear a otimização ao `upscale` por parâmetro opcional quando desejado;
 - aceitar PDF como origem explícita, processar páginas e gerar PDF reconstruído como saída;
-- impor orçamento agressivo de tamanho ao PDF reconstruído para mantê-lo compartilhável.
+- impor orçamento agressivo de tamanho ao PDF reconstruído para mantê-lo compartilhável;
+- utilizar `torch.compile`, `torch.autocast` e cuDNN autotuner para máxima performance em CUDA;
+- processar I/O de disco de forma assíncrona em paralelo à inferência GPU (pipeline produtor-consumidor);
+- processar múltiplas imagens em um único forward pass GPU (batch_size > 1);
+- utilizar SwinIR como alternativa ao Real-ESRGAN com menos artefatos em texto e PDF;
+- executar inferência via TensorRT ou ONNX Runtime como backends plugáveis;
+- distribuir processamento entre múltiplas GPUs com pool de processos isolados.

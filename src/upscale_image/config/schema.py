@@ -21,7 +21,13 @@ class RuntimeConfig:
     device: str = "cpu"
     precision: Literal["fp32", "fp16"] = "fp32"
     tile_size: int = 0   # 0 means no tiling
-    tile_pad: int = 10
+    tile_pad: int = 32
+    async_io: bool = False
+    prefetch_size: int = 4
+    write_workers: int = 2
+    batch_size: int = 1   # images per GPU forward pass; 0 = auto-detect by VRAM
+    multi_gpu: bool = False
+    gpu_ids: list[int] = field(default_factory=list)  # [] = use all detected GPUs
 
 
 @dataclass

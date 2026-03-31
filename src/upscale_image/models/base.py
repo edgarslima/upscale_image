@@ -75,6 +75,27 @@ class SuperResolutionModel(ABC):
             :exc:`RuntimeError`: If called before :meth:`load`.
         """
 
+    def upscale_batch(
+        self,
+        images: list[np.ndarray],
+        config: AppConfig,
+    ) -> list[np.ndarray]:
+        """Upscale a batch of images. Default: serial loop over upscale().
+
+        Runners that support real batch inference (single GPU forward pass for
+        the whole batch) should override this method for maximum throughput.
+        Compatibility guarantee: any existing runner works without changes.
+
+        Args:
+            images: List of BGR uint8 numpy arrays (H × W × 3), may differ in size.
+            config: Resolved AppConfig.
+
+        Returns:
+            List of upscaled BGR uint8 numpy arrays, one per input image,
+            each with shape (scale·H × scale·W × 3).
+        """
+        return [self.upscale(img, config) for img in images]
+
     @abstractmethod
     def unload(self) -> None:
         """Release model weights and free associated resources."""
